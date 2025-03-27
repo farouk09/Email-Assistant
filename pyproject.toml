@@ -1,0 +1,10 @@
+[project]
+name = "email-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langchain-ollama>=0.3.0",
+    "langmem>=0.0.16",
+]
