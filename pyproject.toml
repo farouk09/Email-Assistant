@@ -5,6 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "dotenv>=0.9.9",
+    "google-auth>=2.38.0",
+    "google-auth-oauthlib>=1.2.1",
+    "langchain-huggingface>=0.1.2",
     "langchain-ollama>=0.3.0",
     "langmem>=0.0.16",
+    "pip>=25.0.1",
 ]

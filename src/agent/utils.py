@@ -1,3 +1,9 @@
+from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
+from langchain.prompts import PromptTemplate
+from langchain.output_parsers import StructuredOutputParser, ResponseSchema
+
+
 def parse_email(email_input: dict) -> dict:
     """Parse an email input dictionary.
 
@@ -55,7 +61,18 @@ Correct Classification: {correct_routing}
     
     return "\n".join(formatted)
 
-from langchain_openai import ChatOpenAI
+
+
+
+def load_chatollama_model():
+    """Load a chat model from Ollama."""
+    llm = ChatOllama(
+        model="gemma3:27b",
+        temperature=0,
+        # other params...
+    )
+
+    return llm
 
 def load_model(fully_specified_name: str):
     """Load a chat model from a fully specified name.
@@ -75,8 +92,6 @@ def load_model(fully_specified_name: str):
 
     return model
 
-from langchain.prompts import PromptTemplate
-from langchain.output_parsers import StructuredOutputParser, ResponseSchema
 
 def parse_email_with_langchain(llm , email_input: str) -> dict:
     """Use LangChain with an LLM to extract email details into structured JSON."""
