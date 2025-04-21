@@ -12,7 +12,7 @@ class Router(BaseModel):
     classification: Literal["ignore", "respond", "notify"] = Field(
         description="The classification of an email: 'ignore' for irrelevant emails, "
         "'notify' for important information that doesn't need a response, "
-        "'respond' for emails that need a reply",
+        "'respond' for emails that need a reply or for any user request.",
     )
 
 class State(TypedDict):

@@ -14,26 +14,30 @@ from agent.utils import load_model, parse_email_with_langchain,load_chatollama_m
 from langgraph.prebuilt import create_react_agent
 from agent.state import State, Router
 from langgraph.store.memory import InMemoryStore
-from agent.googl_auth import get_gmail_service, get_calendar_service, create_message
+from agent.google_auth import get_gmail_service, get_calendar_service, create_message
 from agent.prompts import triage_system_prompt, triage_user_prompt, prompt_instructions, profile, agent_system_prompt_memory
 from langmem import create_manage_memory_tool, create_search_memory_tool # type: ignore
 from langchain_core.tools import tool
 from dotenv import load_dotenv
+from agent.configuration import Configuration
+
 
 
 _ = load_dotenv()
 
 llm = init_chat_model("openai:gpt-4o-mini")
 
+#llm = load_chatollama_model()
 llm_parser = load_chatollama_model()
-llm_router = llm.with_structured_output(Router)
+llm_router = llm_parser.with_structured_output(Router)
 
-embed_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': "cuda"})
+"""embed_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': "cuda"})
 
 store = InMemoryStore(
     index={"embed": embed_model}
-)
+)"""
 
+@tool
 def write_email(to: str, subject: str, content: str) -> str:
     """Write and send an email using Gmail API."""
     service = get_gmail_service()
@@ -41,6 +45,7 @@ def write_email(to: str, subject: str, content: str) -> str:
     send_message = service.users().messages().send(userId="me", body=message).execute()
     return f"Email sent to {to} with subject '{subject}'. Message ID: {send_message['id']}"
 
+@tool
 def schedule_meeting(attendees: list[str], subject: str, duration_minutes: int, preferred_day: str) -> str:
     """Schedule a calendar meeting."""
     service = get_calendar_service()
@@ -58,6 +63,7 @@ def schedule_meeting(attendees: list[str], subject: str, duration_minutes: int, 
     event_result = service.events().insert(calendarId="primary", body=event).execute()
     return f"Meeting '{subject}' scheduled on {preferred_day} with {len(attendees)} attendees. Event ID: {event_result['id']}"
 
+@tool
 def check_calendar_availability(day: str) -> str:
     """Check calendar availability for a given day."""
     service = get_calendar_service()
@@ -82,6 +88,8 @@ def check_calendar_availability(day: str) -> str:
     
     return f"Busy times on {day}: {', '.join(busy_times)}" if busy_times else f"No busy times on {day}."
 
+
+
 manage_memory_tool = create_manage_memory_tool(
     namespace=(
         "email_assistant", 
@@ -89,12 +97,15 @@ manage_memory_tool = create_manage_memory_tool(
         "collection"
     )
 )
+
+
 search_memory_tool = create_search_memory_tool(
     namespace=(
         "email_assistant",
         "{langgraph_user_id}",
         "collection"
     )
+
 )
 
 def create_prompt(state):
@@ -120,8 +131,8 @@ response_agent = create_react_agent(
     llm,
     tools=tools,
     prompt=create_prompt,
+    config_schema=Configuration,
     # Use this to ensure the store is passed to the agent 
-    store=store
 )
 
 def triage_router(state: State) -> Command[
@@ -164,7 +175,7 @@ def triage_router(state: State) -> Command[
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Respond to the email {state['email_input']}",
+                    "content": f"Use search memory tool if necessary and then Respond to the email {email_info} and don't forget to update the memory in the end.",
                 }
             ]
         }
@@ -182,8 +193,8 @@ def triage_router(state: State) -> Command[
     return Command(goto=goto, update=update)
 
 
-email_agent = StateGraph(State)
+email_agent = StateGraph(State, config_schema=Configuration)
 email_agent = email_agent.add_node(triage_router)
 email_agent = email_agent.add_node("response_agent", response_agent)
 email_agent = email_agent.add_edge(START, "triage_router")
-email_agent = email_agent.compile(store=store)
+email_agent = email_agent.compile()

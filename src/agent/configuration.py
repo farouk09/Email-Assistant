@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, field
 from typing import Optional
 
 from langchain_core.runnables import RunnableConfig
@@ -16,7 +16,12 @@ class Configuration:
     # these values can be pre-set when you
     # create assistants (https://langchain-ai.github.io/langgraph/cloud/how-tos/configuration_cloud/)
     # and when you invoke the graph
-    my_configurable_param: str = "changeme"
+    langgraph_user_id: str = field(
+        default="lance",
+        metadata={
+            "description": "The user ID for the LangGraph user. This is used to identify the user in the system."
+        },
+    )
 
     @classmethod
     def from_runnable_config(
