@@ -17,7 +17,6 @@ from agent.prompts import triage_system_prompt, triage_user_prompt, prompt_instr
 from langmem import create_manage_memory_tool, create_search_memory_tool # type: ignore
 from langchain_core.tools import tool
 from dotenv import load_dotenv
-from agent.configuration import Configuration
 
 
 
@@ -88,7 +87,7 @@ def check_calendar_availability(day: str) -> str:
 manage_memory_tool = create_manage_memory_tool(
     namespace=(
         "email_assistant", 
-        "{langgraph_user_id}",
+        "lance",
         "collection"
     )
 )
@@ -97,7 +96,7 @@ manage_memory_tool = create_manage_memory_tool(
 search_memory_tool = create_search_memory_tool(
     namespace=(
         "email_assistant",
-        "{langgraph_user_id}",
+        "lance",
         "collection"
     )
 
@@ -125,17 +124,19 @@ tools= [
 response_agent = create_react_agent(
     llm,
     tools=tools,
-    prompt=create_prompt,
-    config_schema=Configuration)
+    prompt=create_prompt)
 
 
 
 def detect_email(state: State) -> Command[Literal["triage_router", "response_agent"]]:
 
+    last_message = state["messages"][-1].content
+
+
     result = llm_detection.invoke(
         [
             {"role": "system", "content": "Your job is to decide if the user have recieved an email and wanted to managed, or the user have another request(question, demand to sent an email, ..ect)."},
-            {"role": "user", "content": state['email_input']},
+            {"role": "user", "content": last_message},
         ]
     )
 
@@ -150,7 +151,7 @@ def detect_email(state: State) -> Command[Literal["triage_router", "response_age
             "messages": [
                 {
                     "role": "user",
-                    "content": f"{state['email_input']}",
+                    "content": f"{last_message}",
                 }
             ]
         }
@@ -163,10 +164,13 @@ def triage_router(state: State) -> Command[
     Literal["response_agent"]
 ]:
 
+    last_message = state["messages"][-1].content
+
+
     email_info = llm_parser.invoke(
         [
             {"role": "system", "content": "You are an email parser. Your job is to extract the email details."},
-            {"role": "user", "content": state['email_input']},
+            {"role": "user", "content": last_message},
         ]
     )
 
@@ -205,7 +209,11 @@ def triage_router(state: State) -> Command[
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Use search memory tool if necessary and then Respond to the email {user_prompt} and don't forget to update the memory in the end.",
+                    "content": f"""Use search memory tool if necessary and then Respond to this email :
+
+                    {user_prompt} 
+                    
+                    and don't forget to update the memory in the end if neccessary.""",
                 }
             ]
         }
@@ -237,7 +245,7 @@ def triage_router(state: State) -> Command[
     return Command(goto=goto, update=update)
 
 
-email_agent = StateGraph(State, config_schema=Configuration)
+email_agent = StateGraph(State)
 email_agent = email_agent.add_node(triage_router)
 email_agent = email_agent.add_node(detect_email)
 email_agent = email_agent.add_node("response_agent", response_agent)
