@@ -132,38 +132,12 @@ src/agent/credentials/
 
 Below are example images of the email assistant in action:
 
-- 📨 Email Classification
-- 📝 Smart Drafts
-- 📆 Calendar Scheduling
+<img width="942" alt="Screenshot 2025-04-27 at 21 22 59" src="https://github.com/user-attachments/assets/0b87a48b-37f2-404a-bca9-625bb0d57d90" />
 
-> *(Add your screenshots in the `assets/` folder and embed here)*
+<img width="929" alt="Screenshot 2025-04-27 at 21 54 05" src="https://github.com/user-attachments/assets/e06bf0b7-4e57-4b9d-8acc-d34242470ce6" />
 
-```markdown
-![Classification Example](assets/classification-demo.png)
-![Scheduling Example](assets/scheduling-demo.png)
-```
+<img width="929" alt="Screenshot 2025-04-27 at 21 54 53" src="https://github.com/user-attachments/assets/b040a17d-3807-4fff-b86e-b0fa22543882" />
 
-### Input Example
-
-Here is the `email_input` used in one of the executions:
-
-```python
-email_input = {
-    "author": "Farouk <faroukfobama@gmail.com>",
-    "to": "hf abdallah <hf_abdallah@esi.dz>",
-    "subject": "Quick question about API documentation",
-    "email_thread": """Hi abdallah,
-
-I was reviewing the API documentation for the new authentication service and noticed a few endpoints seem to be missing from the specs. Could you help clarify if this was intentional or if we should update the docs?
-
-Specifically, I'm looking at:
-- /auth/refresh
-- /auth/validate
-
-Thanks!
-farouk""",
-}
-```
 
 ---
 
