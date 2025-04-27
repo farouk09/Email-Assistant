@@ -5,15 +5,13 @@ This agent returns a predefined response without using an actual LLM.
 from datetime import datetime, timedelta
 from typing import Literal
 
-from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.graph import StateGraph, END, START
 from langgraph.types import Command
 
 from langchain.chat_models import init_chat_model
-from agent.utils import load_model, parse_email_with_langchain,load_chatollama_model
+from agent.utils import load_chatollama_model
 from langgraph.prebuilt import create_react_agent
-from agent.state import State, Router
-from langgraph.store.memory import InMemoryStore
+from agent.state import State, Router, email_detection, EmailInput
 from agent.google_auth import get_gmail_service, get_calendar_service, create_message
 from agent.prompts import triage_system_prompt, triage_user_prompt, prompt_instructions, profile, agent_system_prompt_memory
 from langmem import create_manage_memory_tool, create_search_memory_tool # type: ignore
@@ -28,14 +26,11 @@ _ = load_dotenv()
 llm = init_chat_model("openai:gpt-4o-mini")
 
 #llm = load_chatollama_model()
-llm_parser = load_chatollama_model()
-llm_router = llm_parser.with_structured_output(Router)
+gemma3 = load_chatollama_model()
+llm_router = gemma3.with_structured_output(Router)
+llm_detection = gemma3.with_structured_output(email_detection)
+llm_parser = gemma3.with_structured_output(EmailInput)
 
-"""embed_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2", model_kwargs={'device': "cuda"})
-
-store = InMemoryStore(
-    index={"embed": embed_model}
-)"""
 
 @tool
 def write_email(to: str, subject: str, content: str) -> str:
@@ -131,20 +126,55 @@ response_agent = create_react_agent(
     llm,
     tools=tools,
     prompt=create_prompt,
-    config_schema=Configuration,
-    # Use this to ensure the store is passed to the agent 
-)
+    config_schema=Configuration)
+
+
+
+def detect_email(state: State) -> Command[Literal["triage_router", "response_agent"]]:
+
+    result = llm_detection.invoke(
+        [
+            {"role": "system", "content": "Your job is to decide if the user have recieved an email and wanted to managed, or the user have another request(question, demand to sent an email, ..ect)."},
+            {"role": "user", "content": state['email_input']},
+        ]
+    )
+
+    if result.email_found == True:
+        print("📧 Email recieved in the input.")
+        goto = "triage_router"
+        update = None
+    else:
+        print("🚫 Other request.")
+        goto = "response_agent"
+        update = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"{state['email_input']}",
+                }
+            ]
+        }
+    
+    return Command(goto=goto, update=update)
+
+
 
 def triage_router(state: State) -> Command[
-    Literal["response_agent", "__end__"]
+    Literal["response_agent"]
 ]:
 
-    email_info = parse_email_with_langchain(llm_parser, state['email_input'])
+    email_info = llm_parser.invoke(
+        [
+            {"role": "system", "content": "You are an email parser. Your job is to extract the email details."},
+            {"role": "user", "content": state['email_input']},
+        ]
+    )
 
-    author = email_info["author_name"] + " <" + email_info["author_email"] + ">"
-    to = email_info["to_name"] + " <" + email_info["to_email"] + ">"
-    subject = email_info["subject"]
-    email_thread = email_info["email_thread"]
+
+    author = email_info.author_name+ " <" + email_info.author_email + ">"
+    to = email_info.to_name + " <" + email_info.to_email + ">"
+    subject = email_info.subject
+    email_thread = email_info.email_thread
     
 
     system_prompt = triage_system_prompt.format(
@@ -175,19 +205,33 @@ def triage_router(state: State) -> Command[
             "messages": [
                 {
                     "role": "user",
-                    "content": f"Use search memory tool if necessary and then Respond to the email {email_info} and don't forget to update the memory in the end.",
+                    "content": f"Use search memory tool if necessary and then Respond to the email {user_prompt} and don't forget to update the memory in the end.",
                 }
             ]
         }
     elif result.classification == "ignore":
         print("🚫 Classification: IGNORE - This email can be safely ignored")
-        update = None
-        goto = END
+        update = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Tell the user that the email is ignored.",
+                }
+            ]
+        }
+        goto = "response_agent"
     elif result.classification == "notify":
         # If real life, this would do something else
         print("🔔 Classification: NOTIFY - This email contains important information")
-        update = None
-        goto = END
+        update = {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "Tell the user that the email is important and notify him.",
+                }
+            ]
+        }
+        goto = "response_agent"
     else:
         raise ValueError(f"Invalid classification: {result.classification}")
     return Command(goto=goto, update=update)
@@ -195,6 +239,7 @@ def triage_router(state: State) -> Command[
 
 email_agent = StateGraph(State, config_schema=Configuration)
 email_agent = email_agent.add_node(triage_router)
+email_agent = email_agent.add_node(detect_email)
 email_agent = email_agent.add_node("response_agent", response_agent)
-email_agent = email_agent.add_edge(START, "triage_router")
+email_agent = email_agent.add_edge(START, "detect_email")
 email_agent = email_agent.compile()

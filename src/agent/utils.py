@@ -93,31 +93,4 @@ def load_model(fully_specified_name: str):
     return model
 
 
-def parse_email_with_langchain(llm , email_input: str) -> dict:
-    """Use LangChain with an LLM to extract email details into structured JSON."""
-    
-    # Define the expected fields
-    response_schemas = [
-        ResponseSchema(name="author_name", description="The sender's name"),
-        ResponseSchema(name="author_email", description="The sender's email"),
-        ResponseSchema(name="to_name", description="The recipient's name"),
-        ResponseSchema(name="to_email", description="The recipient's email"),
-        ResponseSchema(name="subject", description="The email subject"),
-        ResponseSchema(name="email_thread", description="The main content of the email")
-    ]
-    
-    parser = StructuredOutputParser.from_response_schemas(response_schemas)
-    
-    prompt_template = PromptTemplate(
-        template="Extract the following details from this email:\n\n{email}\n\n{format_instructions}",
-        input_variables=["email"],
-        partial_variables={"format_instructions": parser.get_format_instructions()},
-    )
-        
-    _input = prompt_template.format(email=email_input)
-    output = llm.invoke(_input)
-
-    print(output.content)
-    return parser.parse(output.content)
-
 
