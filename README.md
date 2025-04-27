@@ -19,11 +19,11 @@ A smart, production-ready email assistant built using [LangGraph](https://www.la
 
 ## Features
 
-- Real-time email classification
-- Smart response drafting
-- Meeting scheduling via Google Calendar
-- Semantic memory for contextual awareness across threads
-- Can handle user commands like sending emails, retrieving the last sent email, and more
+- ✅ Real-time email classification
+- ✅ Smart response drafting
+- ✅ Meeting scheduling via Google Calendar
+- ✅ Semantic memory for contextual awareness across threads
+- ✅ Can handle user commands like sending emails, retrieving the last sent email, and more
 - 🔜 Future: Episodic and procedural memory integration for even more personalized, adaptive behavior
 
 ---
@@ -31,6 +31,11 @@ A smart, production-ready email assistant built using [LangGraph](https://www.la
 ## How It Works
 
 The LangGraph-powered assistant uses a graph-based architecture to manage its workflow. Key components include:
+
+### Detect Email Received Node
+- This node is responsible for detecting if the input is related to a received email or a general user request.
+- If it detects a received email, it forwards it to the Triage Router Node.
+- If it detects a simple request (like asking for the last sent email or sending a new email), it forwards it directly to the React Agent.
 
 ### Triage Router Node
 - This node is responsible for deciding what to do with each incoming email.
