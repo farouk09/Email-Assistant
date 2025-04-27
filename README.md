@@ -177,7 +177,7 @@ We're planning to enhance the assistant's memory using:
 - Enables the assistant to "recall how" it performed a task
 - Supports **few-shot learning** for behavior adaptation
 
-### ⚙Procedural Memory
+### Procedural Memory
 
 - Encodes **rules and routines** the assistant follows
 - Typically lives in **code, prompt templates, or configurations**
