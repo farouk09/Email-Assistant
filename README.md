@@ -2,15 +2,11 @@
 
 A smart, production-ready email assistant built using [LangGraph](https://www.langchain.com/langgraph) and integrated with Gmail and Google Calendar via Auth0. This assistant is designed to simplify email workflows by:
 
-- 🔍 **Classifying** incoming emails as:
-  - Respond
-  - Ignore
-  - Notify
-
-- ✍️ **Drafting responses** to emails intelligently
-- 📅 **Scheduling meetings** with context from the conversation
-- 🧠 **Remembering cross-thread context** using semantic long-term memory
-- 🔒 Fully secure with Google OAuth authentication through **Auth0**
+-  **Classifying** incoming emails as: (respond, ignore, notify)
+-  **Drafting responses** to emails intelligently
+-  **Scheduling meetings** with context from the conversation
+-  **Remembering cross-thread context** using semantic long-term memory
+-  Fully secure with Google OAuth authentication through **Auth0**
 
 
 <img width="747" alt="Screenshot 2025-04-27 at 21 00 17" src="https://github.com/user-attachments/assets/7e31802f-eb42-42cf-899c-0f01dbcb750f" />
@@ -25,6 +21,20 @@ A smart, production-ready email assistant built using [LangGraph](https://www.la
 - ✅ Semantic memory for contextual awareness across threads
 - ✅ Can handle user commands like sending emails, retrieving the last sent email, and more
 - 🔜 Future: Episodic and procedural memory integration for even more personalized, adaptive behavior
+
+---
+
+##  Example Execution
+
+Below are example images of the email assistant in action:
+
+<img width="860" alt="Screenshot 2025-04-27 at 22 02 57" src="https://github.com/user-attachments/assets/0752a9a3-6a46-4090-bc77-201c2e6f1c41" />
+
+<img width="942" alt="Screenshot 2025-04-27 at 21 22 59" src="https://github.com/user-attachments/assets/0b87a48b-37f2-404a-bca9-625bb0d57d90" />
+
+<img width="929" alt="Screenshot 2025-04-27 at 21 54 05" src="https://github.com/user-attachments/assets/e06bf0b7-4e57-4b9d-8acc-d34242470ce6" />
+
+<img width="929" alt="Screenshot 2025-04-27 at 21 54 53" src="https://github.com/user-attachments/assets/b040a17d-3807-4fff-b86e-b0fa22543882" />
 
 ---
 
@@ -125,20 +135,6 @@ Once created, place them in:
 ```bash
 src/agent/credentials/
 ```
-
----
-
-##  Example Execution
-
-Below are example images of the email assistant in action:
-
-<img width="942" alt="Screenshot 2025-04-27 at 21 22 59" src="https://github.com/user-attachments/assets/0b87a48b-37f2-404a-bca9-625bb0d57d90" />
-
-<img width="929" alt="Screenshot 2025-04-27 at 21 54 05" src="https://github.com/user-attachments/assets/e06bf0b7-4e57-4b9d-8acc-d34242470ce6" />
-
-<img width="929" alt="Screenshot 2025-04-27 at 21 54 53" src="https://github.com/user-attachments/assets/b040a17d-3807-4fff-b86e-b0fa22543882" />
-
-
 ---
 
 ## What's Next?
